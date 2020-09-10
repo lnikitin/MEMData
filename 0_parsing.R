@@ -95,7 +95,7 @@ determine_safe_timeout_interval <- function(){
   
 }
 
-update_data <- function(sleep_interval, pages_to_parse){
+update_data <- function(pages_to_parse){
   current_pollution_data <- lapply(pages_to_parse, get_site_data)
   
   history_pollution_data <- readRDS('actual_data.Rds')
@@ -109,6 +109,7 @@ update_data <- function(sleep_interval, pages_to_parse){
 }
 
 while(TRUE){
-  sleep_interval <- determine_safe_timeout_interval()
   update_data(sleep_interval, pages_to_parse)
+  sleep_interval <- determine_safe_timeout_interval()
+  Sys.sleep(sleep_interval)
 }
