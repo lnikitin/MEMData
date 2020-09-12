@@ -82,7 +82,7 @@ get_site_data <- function(page_to_parse){
   
 }
 
-### Determine safe timeout interval to conceal pasring activity
+### Determine safe timeout interval to conceal parsing activity
 
 determine_safe_timeout_interval <- function(){
   next_hour <- as.POSIXlt(Sys.time())$hour + 1
@@ -98,18 +98,18 @@ determine_safe_timeout_interval <- function(){
 update_data <- function(pages_to_parse){
   current_pollution_data <- lapply(pages_to_parse, get_site_data)
   
-  history_pollution_data <- readRDS('actual_data.Rds')
+  history_pollution_data <- readRDS('data/actual_data.Rds')
   
-  pollution_data_full <- union(history_pollution_data, current_pollution_data[[1]]) %>%
+  pollution_data_full <<- union(history_pollution_data, current_pollution_data[[1]]) %>%
     arrange(measurement_representation, period_type, pollutant, timestamp)
   
-  saveRDS(current_pollution_data[[1]], paste0('actual_data-', format(Sys.time(), '%Y-%m-%d_%H-%M-%S'), '.Rds'))
-  saveRDS(pollution_data_full, 'actual_data.Rds')
+  saveRDS(current_pollution_data[[1]], paste0('data/actual_data-', format(Sys.time(), '%Y-%m-%d_%H-%M-%S'), '.Rds'))
+  saveRDS(pollution_data_full, 'data/actual_data.Rds')
   
 }
 
 while(TRUE){
-  update_data(sleep_interval, pages_to_parse)
+  update_data(pages_to_parse)
   sleep_interval <- determine_safe_timeout_interval()
   Sys.sleep(sleep_interval)
 }
