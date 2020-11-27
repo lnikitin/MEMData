@@ -8,7 +8,8 @@ library(RPostgres)
 credentials <- yaml::yaml.load_file('credentials.yml')
 
 pages_to_parse <- c(
-  'https://mosecom.mos.ru/ochakovskaya/'
+  'https://mosecom.mos.ru/ochakovskaya/',
+  'https://mosecom.mos.ru/ochakovskoe-2/'
 )
 
 
@@ -16,7 +17,7 @@ pages_to_parse <- c(
 
 get_site_data <- function(page_to_parse){
   
-  full_page_html <- xml2::read_html(pages_to_parse)
+  full_page_html <- xml2::read_html(page_to_parse)
   data_to_extract <- 
     full_page_html %>% 
     html_node('body') %>%
@@ -127,10 +128,10 @@ update_db <- function(current_pollution_data, pollution_data_full){
 update_data <- function(pages_to_parse){
   current_pollution_data <- lapply(pages_to_parse, get_site_data)
   
-  history_pollution_data <- readRDS('data/actual_data.Rds')
+  history_pollution_data <- list(readRDS('data/actual_data.Rds'))
   
-  pollution_data_full <<- union(history_pollution_data, current_pollution_data[[1]]) %>%
-    arrange(measurement_representation, period_type, pollutant, timestamp)
+  pollution_data_full <<- do.call(union, c(history_pollution_data, current_pollution_data)) %>%
+    arrange(pages_to_parse, measurement_representation, period_type, pollutant, timestamp)
   
   update_files(current_pollution_data, pollution_data_full)
   #update_db(current_pollution_data, pollution_data_full)
