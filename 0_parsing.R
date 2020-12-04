@@ -7,7 +7,7 @@ library(RPostgres)
 
 credentials <- yaml::yaml.load_file('credentials.yml')
 
-pages_to_parse <- c(
+pages_to_parse <- list(
   'https://mosecom.mos.ru/ochakovskaya/',
   'https://mosecom.mos.ru/ochakovskoe-2/'
 )
@@ -16,6 +16,8 @@ pages_to_parse <- c(
 ### Parse page and tidy data
 
 get_site_data <- function(page_to_parse){
+  # Задержка при парсинге разных страниц
+  Sys.sleep(3.6)
   
   full_page_html <- xml2::read_html(page_to_parse)
   data_to_extract <- 
@@ -87,7 +89,7 @@ get_site_data <- function(page_to_parse){
     }
   }
   
-  pollution_data_flat_df <- do.call(rbind, pollution_data_list) %>% cbind(pages_to_parse, .)
+  pollution_data_flat_df <- do.call(rbind, pollution_data_list) %>% cbind(page_to_parse, .)
   
   return(pollution_data_flat_df)
   
@@ -126,12 +128,12 @@ update_db <- function(current_pollution_data, pollution_data_full){
 }
 
 update_data <- function(pages_to_parse){
-  current_pollution_data <- lapply(pages_to_parse, get_site_data)
+  current_pollution_data <- lapply(pages_to_parse, get_site_data) %>% do.call(union, .)
   
   history_pollution_data <- list(readRDS('data/actual_data.Rds'))
   
-  pollution_data_full <<- do.call(union, c(history_pollution_data, current_pollution_data)) %>%
-    arrange(pages_to_parse, measurement_representation, period_type, pollutant, timestamp)
+  pollution_data_full <<- do.call(union, c(history_pollution_data, list(current_pollution_data) )) %>%
+    arrange(page_to_parse, measurement_representation, period_type, pollutant, timestamp)
   
   update_files(current_pollution_data, pollution_data_full)
   #update_db(current_pollution_data, pollution_data_full)
