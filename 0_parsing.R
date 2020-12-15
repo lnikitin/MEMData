@@ -12,6 +12,9 @@ pages_to_parse <- list(
   'https://mosecom.mos.ru/ochakovskoe-2/'
 )
 
+### Add DB connection
+
+source(file = '4_updateDB.R')
 
 ### Parse page and tidy data
 
@@ -101,7 +104,7 @@ determine_safe_timeout_interval <- function(){
   next_hour <- as.POSIXlt(Sys.time())$hour + 1
   initial_random_sleep <- 0L
   while( as.POSIXlt(Sys.time() + initial_random_sleep)$hour != next_hour){
-    initial_random_sleep <- runif(1, 900, 4500)
+    initial_random_sleep <- runif(1, 0, 4500)
     }
   
   return(initial_random_sleep)
@@ -109,22 +112,8 @@ determine_safe_timeout_interval <- function(){
 }
 
 update_files <- function(current_pollution_data, pollution_data_full){
-  saveRDS(current_pollution_data[[1]], paste0('data/actual_data-', format(Sys.time(), '%Y-%m-%d_%H-%M-%S'), '.Rds'))
+  saveRDS(current_pollution_data, paste0('data/actual_data-', format(Sys.time(), '%Y-%m-%d_%H-%M-%S'), '.Rds'))
   saveRDS(pollution_data_full, 'data/actual_data.Rds')
-}
-
-update_db <- function(current_pollution_data, pollution_data_full){
-  ecodata_con <- RPostgres::dbConnect(RPostgres::Postgres(),
-                              dbname = credentials[['POSTGRES_DB']],
-                              host = credentials[['host']],
-                              port = credentials[['port']],
-                              user = credentials[['POSTGRES_USER']],
-                              password = credentials[['POSTGRES_PASSWORD']],
-                              timezone = "Europe/Moscow"
-                              )
-  RPostgres::dbWriteTable(ecodata_con, 'mem_pollution_data', pollution_data_full, overwrite = TRUE)
-  
-  RPostgres::dbDisconnect(ecodata_con)  
 }
 
 update_data <- function(pages_to_parse){
@@ -136,7 +125,7 @@ update_data <- function(pages_to_parse){
     arrange(page_to_parse, measurement_representation, period_type, pollutant, timestamp)
   
   update_files(current_pollution_data, pollution_data_full)
-  #update_db(current_pollution_data, pollution_data_full)
+  update_db(current_pollution_data, pollution_data_full)
   
 }
 
