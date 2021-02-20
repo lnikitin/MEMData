@@ -101,7 +101,7 @@ get_site_data <- function(page_to_parse){
 ### Determine safe timeout interval to conceal parsing activity
 
 determine_safe_timeout_interval <- function(){
-  next_hour <- as.POSIXlt(Sys.time())$hour + 1
+  next_hour <- as.POSIXlt(Sys.time() + 3600)$hour
   initial_random_sleep <- 0L
   while( as.POSIXlt(Sys.time() + initial_random_sleep)$hour != next_hour){
     initial_random_sleep <- runif(1, 0, 4500)
